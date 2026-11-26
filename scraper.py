@@ -2,6 +2,7 @@ import json
 import os
 import datetime
 import requests
+import urllib.parse
 
 DATA_FILE = "data.json"
 CUTOFF_DAYS = 180
@@ -33,16 +34,24 @@ def scrape_taptap_upcoming():
         
         game_list = data.get("data", {}).get("list", [])
         if not game_list:
-            print("TapTap 返回数据为空，可能是接口结构变更或风控拦截")
+            print("TapTap 返回数据为空")
             return items
             
         for game in game_list:
             title = game.get("title") or game.get("name", "未知游戏")
-            app_id = game.get("app_id") or game.get("id")  # 提取 ID
             today = datetime.date.today().isoformat()
             
-            # 构建 TapTap 详情页链接
-            source_url = f"https://www.taptap.cn/app/{app_id}" if app_id else ""
+            # 尝试获取 ID（TapTap 有时叫 app_id，有时叫 id，有时在 app 字段下）
+            app_id = game.get("app_id") or game.get("id")
+            if not app_id and "app" in game:
+                app_id = game["app"].get("id")
+                
+            # 如果有 ID，直接拼详情页；如果没有，拼搜索页（保证一定能跳转）
+            if app_id:
+                source_url = f"https://www.taptap.cn/app/{app_id}"
+            else:
+                safe_title = urllib.parse.quote(title)
+                source_url = f"https://www.taptap.cn/search/{safe_title}"
             
             items.append({
                 "name": title,
@@ -53,14 +62,14 @@ def scrape_taptap_upcoming():
                 "expected_raw": "查看 TapTap 详情",
                 "source_ts": today,
                 "source_label": "TapTap 预约榜",
-                "source_url": source_url,          # 新增：链接字段
+                "source_url": source_url,          # 100% 会生成链接
                 "basis": "P0 TapTap 预约榜自动抓取",
                 "contact": "—",
                 "pinned": False
             })
             
     except Exception as e:
-        print(f"抓取 TapTap 预约榜失败: {e}")
+        print(f"抓取失败: {e}")
     return items
 
 def merge_and_save(existing, new_items):
