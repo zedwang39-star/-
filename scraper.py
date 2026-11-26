@@ -16,7 +16,10 @@ def load_existing():
     return {"items": []}
 
 def scrape_taptap_upcoming():
+    # 这里的 type_name=reserve 就是“预约榜”（即即将上线）
     url = "https://www.taptap.cn/webapiv2/app-top/v2/hits?platform=android&type_name=reserve&dataSource=Android"
+    
+    # 这里的 User-Agent 和 Referer 是伪装浏览器请求，防止被拦截
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Referer": "https://www.taptap.cn/",
