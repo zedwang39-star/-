@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>出海App监测看板</title>
+<style>
+  :root{--bg:#0f1117;--surface:#171a22;--border:#262a35;--text:#e8eaed;--muted:#9aa0ab;--accent:#6c8cff;--warn:#f0a04b;--pin:#3d3350}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px}
+  header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+  h1{font-size:20px;font-weight:600}
+  .meta{color:var(--muted);font-size:12px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .toolbar button,.toolbar select{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer}
+  .toolbar button.active{border-color:var(--accent);color:var(--accent)}
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:1150px}
+  th,td{padding:11px 12px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:#13161d;color:var(--muted);font-weight:500;white-space:nowrap;position:sticky;top:0;z-index:2}
+  th.sortable{cursor:pointer;user-select:none}
+  th.sortable:hover{color:var(--text)}
+  th .sort-indicator{display:inline-block;margin-left:4px;font-size:11px;color:var(--muted);min-width:14px;text-align:center}
+  th .sort-indicator.active{color:var(--accent)}
+  tr.pinned td{background:var(--pin)!important}
+  tr:hover td{background:#1c202a}
+  .tag{display:inline-block;padding:2px 7px;border-radius:5px;font-size:11px;background:#232734;color:var(--muted)}
+  .tag.game{color:#7ee0a3;background:#173024}.tag.ai{color:#7ec8e0;background:#162a33}.tag.short{color:#e0b47e;background:#332a17}.tag.fin{color:#c79ee0;background:#2a1733}
+  .contact{color:var(--accent);font-size:12px;word-break:break-all}
+  .warn{color:var(--warn);font-size:11px}
+  .pagination{display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px}
+  .pagination button{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:13px}
+  .pagination button:disabled{opacity:.35;cursor:not-allowed}
+  .page-info{color:var(--muted);font-size:13px}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+  .auth-overlay{position:fixed;inset:0;background:rgba(10,12,18,.92);display:flex;align-items:center;justify-content:center;z-index:100}
+  .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:340px}
+  .auth-card h2{font-size:16px;margin-bottom:6px}.auth-card p{color:var(--muted);font-size:12px;margin-bottom:16px}
+  .auth-card input{width:100%;padding:9px 12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:10px}
+  .auth-card button{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer}
+  .auth-err{color:#e06666;font-size:12px;margin-top:8px;min-height:16px}
+</style>
+</head>
+<body>
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <h2>出海App监测看板</h2>
+    <p>本地验证 · 默认口令 <code>overseas2026</code></p>
+    <input type="password" id="authInput" placeholder="输入访问口令" autofocus>
+    <button onclick="doAuth()">进入</button>
+    <div class="auth-err" id="authErr"></div>
+  </div>
+</div>
+<header>
+  <div><h1>出海App监测看板</h1><div class="meta" id="metaLine">加载中…</div></div>
+  <div class="meta" id="clockLine"></div>
+</header>
+<div class="toolbar" id="toolbar" style="display:none">
+  <button class="active" data-filter="all" onclick="setFilter('all',this)">全部</button>
+  <button data-filter="game" onclick="setFilter('game',this)">游戏</button>
+  <button data-filter="ai" onclick="setFilter('ai',this)">AI工具</button>
+  <button data-filter="short" onclick="setFilter('short',this)">短剧</button>
+  <button data-filter="fin" onclick="setFilter('fin',this)">金融</button>
+  <select id="windowSelect" onchange="render()">
+    <option value="180">近6个月</option><option value="120">近4个月</option><option value="90">近3个月</option>
+  </select>
+</div>
+<div class="table-wrap" id="tableWrap" style="display:none">
+  <table>
+    <thead><tr>
+      <th>项目 / App</th><th>品类</th><th>国内主体</th><th>海外主体 / 穿透</th>
+      <th class="sortable" onclick="cycleSort()">预计上线时间<span class="sort-indicator" id="sortIcon">↺</span></th>
+      <th>信息源时间</th><th>时间依据</th><th>公开联系方式</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div class="pagination" id="pagination" style="display:none">
+  <button id="prevBtn" onclick="goPage(-1)">上一页</button>
+  <span class="page-info" id="pageInfo"></span>
+  <button id="nextBtn" onclick="goPage(1)">下一页</button>
+</div>
+<script>
+const AUTH_KEY="overseas_board_auth",PASSWORD="overseas2026",PAGE_SIZE=20;
+let currentPage=0,sortState=0,currentFilter="all",data=[];
+function doAuth(){const v=document.getElementById("authInput").value.trim();if(v===PASSWORD){sessionStorage.setItem(AUTH_KEY,"1");document.getElementById("authOverlay").style.display="none";boot()}else{document.getElementById("authErr").textContent="口令不正确"}}
+document.getElementById("authInput").addEventListener("keydown",e=>{if(e.key==="Enter")doAuth()});
+if(sessionStorage.getItem(AUTH_KEY)==="1"){document.getElementById("authOverlay").style.display="none";boot()}
+async function boot(){
+  document.getElementById("toolbar").style.display="flex";document.getElementById("tableWrap").style.display="block";document.getElementById("pagination").style.display="flex";updateClock();setInterval(updateClock,3e4);
+  try {
+    const res = await fetch("data.json?t=" + Date.now());
+    const json = await res.json();
+    data = json.items.map(d => ({ ...d, expected_ts: parseDate(d.expected), source_ts_num: parseDate(d.source_ts) }));
+  } catch (e) {
+    console.error("读取 data.json 失败", e);
+    data = []; // 如果读取失败则显示空
+  }
+  render();
+}
+function updateClock(){document.getElementById("clockLine").textContent=new Date().toLocaleString("zh-CN",{hour12:false})}
+function parseDate(s){if(!s)return 0;const m=String(s).match(/(\d{4})[-年](\d{1,2})[-月](\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]).getTime();const m2=String(s).match(/(\d{4})[-年](\d{1,2})/);if(m2)return new Date(+m2[1],+m2[2]-1,15).getTime();return 0}
+function cycleSort(){sortState=(sortState+1)%3;render()}
+function getSorted(){const cutoffDays=parseInt(document.getElementById("windowSelect").value,10),cutoff=Date.now()-cutoffDays*864e5;let list=data.filter(d=>{if(currentFilter!=="all"&&d.category!==currentFilter)return!1;if(d.source_ts_num&&d.source_ts_num<cutoff)return!1;return!0});const pinned=list.filter(d=>d.pinned);let rest=list.filter(d=>!d.pinned);rest.sort((a,b)=>{if(sortState===1)return(a.expected_ts||0)-(b.expected_ts||0);if(sortState===2)return(b.expected_ts||0)-(a.expected_ts||0);return(b.source_ts_num||0)-(a.source_ts_num||0)});return[...pinned,...rest]}
+function render(){const sorted=getSorted(),totalPages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));if(currentPage>=totalPages)currentPage=totalPages-1;const start=currentPage*PAGE_SIZE,pageItems=sorted.slice(start,start+PAGE_SIZE);const tbody=document.getElementById("tbody");tbody.innerHTML=pageItems.length===0?`<tr><td colspan="8" class="empty">暂无数据，请等待 Actions 抓取或检查 data.json</td></tr>`:pageItems.map(d=>{const catLabel={game:"游戏",ai:"AI工具",short:"短剧",fin:"金融"}[d.category]||d.category;return`<tr class="${d.pinned?"pinned":""}"><td><strong>${esc(d.name)}</strong></td><td><span class="tag ${d.category}">${catLabel}</span></td><td>${esc(d.domestic||"—")}</td><td>${esc(d.overseas||"—")}</td><td>${esc(d.expected_raw||d.expected)}</td><td>${esc(d.source_ts)}<br><span class="warn">${esc(d.source_label)}</span></td><td><span class="warn">${esc(d.basis)}</span></td><td class="contact">${esc(d.contact||"—")}</td></tr>`}).join("");document.getElementById("pageInfo").textContent=`第 ${currentPage+1} / ${totalPages} 页 · 共 ${sorted.length} 条`;document.getElementById("prevBtn").disabled=currentPage===0;document.getElementById("nextBtn").disabled=currentPage>=totalPages-1;const icon=document.getElementById("sortIcon");icon.textContent=sortState===0?"↺":sortState===1?"↑":"↓";icon.className="sort-indicator"+(sortState!==0?" active":"");document.getElementById("metaLine").textContent=`近 ${document.getElementById("windowSelect").value} 天窗口 · ${sorted.length} 条 · 自动读取 data.json`}
+function goPage(delta){const sorted=getSorted(),totalPages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));currentPage=Math.min(Math.max(0,currentPage+delta),totalPages-1);render()}
+function setFilter(f,btn){currentFilter=f;currentPage=0;document.querySelectorAll("#toolbar button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");render()}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+</script>
+</body>
+</html>
