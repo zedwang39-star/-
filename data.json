@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26T08:39:32.140084Z",
+  "updated_at": "2026-11-26T09:02:38.334040Z",
   "items": [
     {
       "name": "南威海外短剧自有发行平台 PeakReel",
@@ -1805,6 +1805,90 @@
       "source_label": "Dogpay 支付资讯",
       "source_url": "https://pay.news/items/l5nf63ih4stpvkfojpiwy1dor",
       "basis": "P1 出海/科技情报聚合",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "アズールプロミリア",
+      "category": "game",
+      "domestic": "YOSTAR LIMITED",
+      "overseas": "日本 App Store",
+      "expected": "已上线",
+      "expected_raw": "2026-11-24",
+      "source_ts": "2026-11-26",
+      "source_label": "App Store 日本",
+      "source_url": "https://apps.apple.com/jp/app/%E3%82%A2%E3%82%BA%E3%83%BC%E3%83%AB%E3%83%97%E3%83%AD%E3%83%9F%E3%83%AA%E3%82%A2/id6787982572?uo=4",
+      "basis": "P1 App Store 近3月新上架/预约",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "饥困荒野",
+      "category": "game",
+      "domestic": "Shenzhen Tencent Tianyou Technology Ltd",
+      "overseas": "中国大陆 App Store",
+      "expected": "已上线",
+      "expected_raw": "2026-11-23",
+      "source_ts": "2026-11-26",
+      "source_label": "App Store 中国大陆",
+      "source_url": "https://apps.apple.com/cn/app/%E9%A5%A5%E5%9B%B0%E8%8D%92%E9%87%8E/id6479747214?uo=4",
+      "basis": "P1 App Store 近3月新上架/预约",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "蓝色星原：旅谣",
+      "category": "game",
+      "domestic": "蛮啾游戏",
+      "overseas": "中国大陆 App Store",
+      "expected": "已上线",
+      "expected_raw": "2026-11-24",
+      "source_ts": "2026-11-26",
+      "source_label": "App Store 中国大陆",
+      "source_url": "https://apps.apple.com/cn/app/%E8%93%9D%E8%89%B2%E6%98%9F%E5%8E%9F-%E6%97%85%E8%B0%A3/id6754017631?uo=4",
+      "basis": "P1 App Store 近3月新上架/预约",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "我在古代有座城",
+      "category": "game",
+      "domestic": "安徽盈趣网络科技有限公司",
+      "overseas": "中国大陆 App Store",
+      "expected": "已上线",
+      "expected_raw": "2026-11-15",
+      "source_ts": "2026-11-26",
+      "source_label": "App Store 中国大陆",
+      "source_url": "https://apps.apple.com/cn/app/%E6%88%91%E5%9C%A8%E5%8F%A4%E4%BB%A3%E6%9C%89%E5%BA%A7%E5%9F%8E/id6821266319?uo=4",
+      "basis": "P1 App Store 近3月新上架/预约",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "王者万象棋",
+      "category": "game",
+      "domestic": "Shenzhen Tencent Tianyou Technology Ltd",
+      "overseas": "中国大陆 App Store",
+      "expected": "已上线",
+      "expected_raw": "2026-09-08",
+      "source_ts": "2026-11-26",
+      "source_label": "App Store 中国大陆",
+      "source_url": "https://apps.apple.com/cn/app/%E7%8E%8B%E8%80%85%E4%B8%87%E8%B1%A1%E6%A3%8B/id1614798032?uo=4",
+      "basis": "P1 App Store 近3月新上架/预约",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "Today: 个人 AI 助理",
+      "category": "utilities",
+      "domestic": "Huihe Intelligent Technology (shanghai) Co., Ltd",
+      "overseas": "中国大陆 App Store",
+      "expected": "已上线",
+      "expected_raw": "2026-10-04",
+      "source_ts": "2026-11-26",
+      "source_label": "App Store 中国大陆",
+      "source_url": "https://apps.apple.com/cn/app/today-%E4%B8%AA%E4%BA%BA-ai-%E5%8A%A9%E7%90%86/id6775764827?uo=4",
+      "basis": "P1 App Store 近3月新上架/预约",
       "contact": "—",
       "pinned": false
     }
