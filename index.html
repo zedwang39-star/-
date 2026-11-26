@@ -94,7 +94,7 @@ async function boot(){
     data = json.items.map(d => ({ ...d, expected_ts: parseDate(d.expected), source_ts_num: parseDate(d.source_ts) }));
   } catch (e) {
     console.error("读取 data.json 失败", e);
-    data = []; // 如果读取失败则显示空
+    data = []; 
   }
   render();
 }
@@ -102,13 +102,39 @@ function updateClock(){document.getElementById("clockLine").textContent=new Date
 function parseDate(s){if(!s)return 0;const m=String(s).match(/(\d{4})[-年](\d{1,2})[-月](\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]).getTime();const m2=String(s).match(/(\d{4})[-年](\d{1,2})/);if(m2)return new Date(+m2[1],+m2[2]-1,15).getTime();return 0}
 function cycleSort(){sortState=(sortState+1)%3;render()}
 function getSorted(){const cutoffDays=parseInt(document.getElementById("windowSelect").value,10),cutoff=Date.now()-cutoffDays*864e5;let list=data.filter(d=>{if(currentFilter!=="all"&&d.category!==currentFilter)return!1;if(d.source_ts_num&&d.source_ts_num<cutoff)return!1;return!0});const pinned=list.filter(d=>d.pinned);let rest=list.filter(d=>!d.pinned);rest.sort((a,b)=>{if(sortState===1)return(a.expected_ts||0)-(b.expected_ts||0);if(sortState===2)return(b.expected_ts||0)-(a.expected_ts||0);return(b.source_ts_num||0)-(a.source_ts_num||0)});return[...pinned,...rest]}
-function render(){const sorted=getSorted(),totalPages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));if(currentPage>=totalPages)currentPage=totalPages-1;const start=currentPage*PAGE_SIZE,pageItems=sorted.slice(start,start+PAGE_SIZE);const tbody=document.getElementById("tbody");tbody.innerHTML=pageItems.length===0?`<tr><td colspan="8" class="empty">暂无数据，请等待 Actions 抓取或检查 data.json</td></tr>`:pageItems.map(d=>{const catLabel={game:"游戏",ai:"AI工具",short:"短剧",fin:"金融"}[d.category]||d.category;return`<tr class="${d.pinned?"pinned":""}"><td>
-  <strong>
-    ${d.source_url 
-      ? `<a href="${esc(d.source_url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">${esc(d.name)}</a>` 
-      : esc(d.name)}
-  </strong>
-</td><td><span class="tag ${d.category}">${catLabel}</span></td><td>${esc(d.domestic||"—")}</td><td>${esc(d.overseas||"—")}</td><td>${esc(d.expected_raw||d.expected)}</td><td>${esc(d.source_ts)}<br><span class="warn">${esc(d.source_label)}</span></td><td><span class="warn">${esc(d.basis)}</span></td><td class="contact">${esc(d.contact||"—")}</td></tr>`}).join("");document.getElementById("pageInfo").textContent=`第 ${currentPage+1} / ${totalPages} 页 · 共 ${sorted.length} 条`;document.getElementById("prevBtn").disabled=currentPage===0;document.getElementById("nextBtn").disabled=currentPage>=totalPages-1;const icon=document.getElementById("sortIcon");icon.textContent=sortState===0?"↺":sortState===1?"↑":"↓";icon.className="sort-indicator"+(sortState!==0?" active":"");document.getElementById("metaLine").textContent=`近 ${document.getElementById("windowSelect").value} 天窗口 · ${sorted.length} 条 · 自动读取 data.json`}
+function render(){
+  const sorted=getSorted(),totalPages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));
+  if(currentPage>=totalPages)currentPage=totalPages-1;
+  const start=currentPage*PAGE_SIZE,pageItems=sorted.slice(start,start+PAGE_SIZE);
+  const tbody=document.getElementById("tbody");
+  
+  tbody.innerHTML=pageItems.length===0?`<tr><td colspan="8" class="empty">暂无数据，请等待 Actions 抓取或检查 data.json</td></tr>`:pageItems.map(d=>{
+    const catLabel={game:"游戏",ai:"AI工具",short:"短剧",fin:"金融"}[d.category]||d.category;
+    
+    // 核心逻辑：有 source_url 跳原网页，没有则跳百度搜索
+    const linkUrl = d.source_url || `https://www.baidu.com/s?wd=${encodeURIComponent(d.name + ' 出海')}`;
+    const linkColor = d.source_url ? 'var(--accent)' : 'var(--text)';
+    const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener" style="color:${linkColor};text-decoration:none;">${esc(d.name)}</a>`;
+
+    return `<tr class="${d.pinned?"pinned":""}">
+      <td><strong>${linkHtml}</strong></td>
+      <td><span class="tag ${d.category}">${catLabel}</span></td>
+      <td>${esc(d.domestic||"—")}</td>
+      <td>${esc(d.overseas||"—")}</td>
+      <td>${esc(d.expected_raw||d.expected)}</td>
+      <td>${esc(d.source_ts)}<br><span class="warn">${esc(d.source_label)}</span></td>
+      <td><span class="warn">${esc(d.basis)}</span></td>
+      <td class="contact">${esc(d.contact||"—")}</td>
+    </tr>`
+  }).join("");
+  
+  document.getElementById("pageInfo").textContent=`第 ${currentPage+1} / ${totalPages} 页 · 共 ${sorted.length} 条`;
+  document.getElementById("prevBtn").disabled=currentPage===0;
+  document.getElementById("nextBtn").disabled=currentPage>=totalPages-1;
+  const icon=document.getElementById("sortIcon");icon.textContent=sortState===0?"↺":sortState===1?"↑":"↓";
+  icon.className="sort-indicator"+(sortState!==0?" active":"");
+  document.getElementById("metaLine").textContent=`近 ${document.getElementById("windowSelect").value} 天窗口 · ${sorted.length} 条 · 自动读取 data.json`
+}
 function goPage(delta){const sorted=getSorted(),totalPages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));currentPage=Math.min(Math.max(0,currentPage+delta),totalPages-1);render()}
 function setFilter(f,btn){currentFilter=f;currentPage=0;document.querySelectorAll("#toolbar button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");render()}
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
