@@ -4,7 +4,7 @@ import datetime
 import re
 import requests
 import urllib.parse
-from google_play_scraper import search, app as gplay_app, Sort
+from google_play_scraper import search, app as gplay_app
 
 DATA_FILE = "data.json"
 CUTOFF_DAYS = 90  # 近3个月
@@ -15,20 +15,19 @@ COUNTRIES = {
     "kr": "韩国", "cn": "中国大陆", "hk": "中国香港"
 }
 
-# App Store 品类 ID 映射（iTunes API 的 genreId）
 APPSTORE_GENRES = {
-    "game": "6014",          # Games
-    "lifestyle": "6012",     # Lifestyle（生活）
-    "utilities": "6002",     # Utilities（工具）
-    "social": "6005",        # Social Networking（社交）
+    "game": "6014",
+    "lifestyle": "6012",
+    "utilities": "6002",
+    "social": "6005",
 }
 
-# Google Play 品类映射
+# Google Play 搜索关键词映射
 GPLAY_CATEGORIES = {
-    "game": "GAME",
-    "lifestyle": "LIFESTYLE",
-    "utilities": "TOOLS",
-    "social": "SOCIAL",
+    "game": "new game",
+    "lifestyle": "new lifestyle app",
+    "utilities": "new utility app",
+    "social": "new social app",
 }
 
 # ========== 国内开发者识别 ==========
@@ -46,12 +45,11 @@ def is_cn_developer(dev_name: str, dev_url: str = "") -> bool:
 
 # ========== +86 电话提取 ==========
 PHONE_PATTERN = re.compile(
-    r'(\+?86[\s\-]?)?1[3-9]\d{9}'  # 中国大陆手机号
-    r'|(\+?86[\s\-]?)?0\d{2,3}[\s\-]?\d{7,8}'  # 固话
+    r'(\+?86[\s\-]?)?1[3-9]\d{9}'
+    r'|(\+?86[\s\-]?)?0\d{2,3}[\s\-]?\d{7,8}'
 )
 
 def extract_phone_from_url(url: str) -> str:
-    """访问开发者官网/隐私政策页，提取 +86 电话"""
     if not url or not url.startswith(("http://", "https://")):
         return ""
     try:
@@ -62,7 +60,6 @@ def extract_phone_from_url(url: str) -> str:
         matches = PHONE_PATTERN.findall(text)
         for m in matches:
             raw = "".join(m).strip()
-            # 归一化为 +86 格式
             digits = re.sub(r'\D', '', raw)
             if len(digits) == 11 and digits.startswith("1"):
                 return f"+86 {digits}"
@@ -86,8 +83,6 @@ def within_3_months(date_str: str) -> bool:
 def scrape_appstore(country_code: str, country_name: str):
     items = []
     for cat_key, genre_id in APPSTORE_GENRES.items():
-        # 使用 RSS 新上架/热门榜单（Apple 公开 feed）
-        # 注意：RSS 没有直接的“近3个月”筛选，需要拿回来后再用 releasedAt 过滤
         url = (
             f"https://itunes.apple.com/{country_code}/rss/topfreeapplications/"
             f"limit=50/genre={genre_id}/json"
@@ -101,7 +96,6 @@ def scrape_appstore(country_code: str, country_name: str):
                 app_id = entry.get("id", {}).get("attributes", {}).get("im:id")
                 if not app_id:
                     continue
-                # 用 Lookup API 拿详细信息（含 releasedAt）
                 lookup_url = f"https://itunes.apple.com/lookup?id={app_id}&country={country_code}"
                 lr = requests.get(lookup_url, timeout=10)
                 lr.raise_for_status()
@@ -142,26 +136,23 @@ def scrape_appstore(country_code: str, country_name: str):
 # ========== Google Play 抓取 ==========
 def scrape_gplay(country_code: str, country_name: str):
     items = []
-    for cat_key, cat_id in GPLAY_CATEGORIES.items():
+    for cat_key, keyword in GPLAY_CATEGORIES.items():
         try:
+            # 修复点：去掉了不支持的 sort 参数
             results = search(
-                "new",  # 关键词“new”配合排序可偏向新应用
+                keyword,
                 lang="en",
                 country=country_code,
-                n_hits=30,
-                sort=Sort.NEWEST,  # 按最新排序
+                n_hits=30
             )
             for r in results:
                 app_id = r.get("appId")
                 if not app_id:
                     continue
                 detail = gplay_app(app_id, lang="en", country=country_code)
-                released = detail.get("released", "")
-                # Google Play 的 released 字段格式可能是 "Jan 1, 2026" 或空
-                if released and "2026" not in released:
-                    continue
-                # 粗略判断：如果 updated 在近3个月内，且 installs 很少，视为新上架候选
+                
                 updated = detail.get("updated", 0)
+                # 严格检查更新时间是否在 90 天内
                 if updated and (datetime.datetime.now().timestamp() - updated / 1000) > CUTOFF_DAYS * 86400:
                     continue
 
@@ -179,11 +170,11 @@ def scrape_gplay(country_code: str, country_name: str):
                     "domestic": dev_name,
                     "overseas": f"{country_name} Google Play",
                     "expected": "已上线",
-                    "expected_raw": released or "",
+                    "expected_raw": "近期更新",
                     "source_ts": datetime.date.today().isoformat(),
                     "source_label": f"Google Play {country_name}",
                     "source_url": detail.get("url", ""),
-                    "basis": "P1 Google Play 近3月新上架",
+                    "basis": "P1 Google Play 近3月新上架/更新",
                     "contact": phone or "—",
                     "pinned": False
                 })
