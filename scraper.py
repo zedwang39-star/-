@@ -16,16 +16,12 @@ def load_existing():
     return {"items": []}
 
 def scrape_taptap_upcoming():
-    # 这里的 type_name=reserve 就是“预约榜”（即即将上线）
     url = "https://www.taptap.cn/webapiv2/app-top/v2/hits?platform=android&type_name=reserve&dataSource=Android"
     
-    # 这里的 User-Agent 和 Referer 是伪装浏览器请求，防止被拦截
-        # 伪装成 TapTap 的移动端请求，补充关键校验头
     headers = {
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
         "Referer": "https://www.taptap.cn/",
         "Accept": "application/json, text/plain, */*",
-        # 关键补充：模拟官方 App 或网页端的客户端信息
         "X-UA": "V=1&PN=WebM&LANG=zh_CN&VN_CODE=102&LOC=CN&PLT=iOS&DS=Android&UID=12f0a48b-bd25-4dce-9d50-27924e83da1d&OS=iOS&OSV=18.5"
     }
     
@@ -42,7 +38,11 @@ def scrape_taptap_upcoming():
             
         for game in game_list:
             title = game.get("title") or game.get("name", "未知游戏")
+            app_id = game.get("app_id") or game.get("id")  # 提取 ID
             today = datetime.date.today().isoformat()
+            
+            # 构建 TapTap 详情页链接
+            source_url = f"https://www.taptap.cn/app/{app_id}" if app_id else ""
             
             items.append({
                 "name": title,
@@ -53,6 +53,7 @@ def scrape_taptap_upcoming():
                 "expected_raw": "查看 TapTap 详情",
                 "source_ts": today,
                 "source_label": "TapTap 预约榜",
+                "source_url": source_url,          # 新增：链接字段
                 "basis": "P0 TapTap 预约榜自动抓取",
                 "contact": "—",
                 "pinned": False
