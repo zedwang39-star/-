@@ -20,10 +20,13 @@ def scrape_taptap_upcoming():
     url = "https://www.taptap.cn/webapiv2/app-top/v2/hits?platform=android&type_name=reserve&dataSource=Android"
     
     # 这里的 User-Agent 和 Referer 是伪装浏览器请求，防止被拦截
+        # 伪装成 TapTap 的移动端请求，补充关键校验头
     headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
         "Referer": "https://www.taptap.cn/",
         "Accept": "application/json, text/plain, */*",
+        # 关键补充：模拟官方 App 或网页端的客户端信息
+        "X-UA": "V=1&PN=WebM&LANG=zh_CN&VN_CODE=102&LOC=CN&PLT=iOS&DS=Android&UID=12f0a48b-bd25-4dce-9d50-27924e83da1d&OS=iOS&OSV=18.5"
     }
     
     items = []

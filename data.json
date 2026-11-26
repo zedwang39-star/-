@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26T07:09:16.456000Z",
+  "updated_at": "2026-11-26T07:12:39.915136Z",
   "items": [
     {
       "name": "南威海外短剧自有发行平台 PeakReel",
@@ -168,6 +168,19 @@
       "source_label": "同花顺互动问答",
       "basis": "P1 海外版已上线，作为窗口内已验证样本",
       "contact": "万兴科技 IR / 官网入口",
+      "pinned": false
+    },
+    {
+      "name": "未知游戏",
+      "category": "game",
+      "domestic": "待确认",
+      "overseas": "待确认",
+      "expected": "TBD",
+      "expected_raw": "查看 TapTap 详情",
+      "source_ts": "2026-11-26",
+      "source_label": "TapTap 预约榜",
+      "basis": "P0 TapTap 预约榜自动抓取",
+      "contact": "—",
       "pinned": false
     }
   ]
