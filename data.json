@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26T09:13:19.179880Z",
+  "updated_at": "2026-11-26T09:14:43.166387Z",
   "items": [
     {
       "name": "南威海外短剧自有发行平台 PeakReel",
@@ -1889,6 +1889,48 @@
       "source_label": "App Store 中国大陆",
       "source_url": "https://apps.apple.com/cn/app/today-%E4%B8%AA%E4%BA%BA-ai-%E5%8A%A9%E7%90%86/id6775764827?uo=4",
       "basis": "P1 App Store 近3月新上架/预约",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "腾讯魔方新游戏《狩》首曝，没练过连招的朋友能一起玩吗？",
+      "category": "game",
+      "domestic": "海外/全球",
+      "overseas": "全球发布",
+      "expected": "已发布/预约中",
+      "expected_raw": "已发布/预约中",
+      "source_ts": "2026-11-26",
+      "source_label": "GameLook 新游",
+      "source_url": "http://www.gamelook.com.cn/2026/11/607224/",
+      "basis": "P1 移动端新品发布",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "“二游大佬”散爆乔迁！首次在上海拥有独栋办公楼，全力冲刺新游戏",
+      "category": "game",
+      "domestic": "海外/全球",
+      "overseas": "全球发布",
+      "expected": "已发布/预约中",
+      "expected_raw": "已发布/预约中",
+      "source_ts": "2026-11-26",
+      "source_label": "GameLook 新游",
+      "source_url": "http://www.gamelook.com.cn/2026/11/607248/",
+      "basis": "P1 移动端新品发布",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "“猫咪游戏专业户”来中国踢馆：上线抖音微信小游戏，月收入破5000万！",
+      "category": "game",
+      "domestic": "海外/全球",
+      "overseas": "全球发布",
+      "expected": "已发布/预约中",
+      "expected_raw": "已发布/预约中",
+      "source_ts": "2026-11-26",
+      "source_label": "GameLook 新游",
+      "source_url": "http://www.gamelook.com.cn/2026/11/607062/",
+      "basis": "P1 移动端新品发布",
       "contact": "—",
       "pinned": false
     }
