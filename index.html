@@ -11,6 +11,7 @@
   header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px}
   h1{font-size:20px;font-weight:600}
   .meta{color:var(--muted);font-size:12px}
+  .header-right{display:flex;align-items:center;gap:16px;}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
   .toolbar button,.toolbar select{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer}
   .toolbar button.active{border-color:var(--accent);color:var(--accent)}
@@ -39,6 +40,11 @@
   .auth-card input{width:100%;padding:9px 12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:10px}
   .auth-card button{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer}
   .auth-err{color:#e06666;font-size:12px;margin-top:8px;min-height:16px}
+  
+  /* 刷新按钮样式 */
+  #refreshBtn { background: var(--accent); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: 0.2s; }
+  #refreshBtn:hover { filter: brightness(1.1); }
+  #refreshBtn:disabled { opacity: 0.7; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -52,8 +58,15 @@
   </div>
 </div>
 <header>
-  <div><h1>出海App监测看板</h1><div class="meta" id="metaLine">加载中…</div></div>
-  <div class="meta" id="clockLine"></div>
+  <div>
+    <h1>出海App监测看板</h1>
+    <div class="meta" id="metaLine">加载中…</div>
+  </div>
+  <div class="header-right">
+    <!-- 新增：手动刷新按钮 -->
+    <button id="refreshBtn" onclick="manualRefresh()">🔄 刷新数据</button>
+    <div class="meta" id="clockLine"></div>
+  </div>
 </header>
 <div class="toolbar" id="toolbar" style="display:none">
   <button class="active" data-filter="all" onclick="setFilter('all',this)">全部</button>
@@ -83,12 +96,23 @@
 <script>
 const AUTH_KEY="overseas_board_auth",PASSWORD="overseas2026",PAGE_SIZE=20;
 let currentPage=0,sortState=0,currentFilter="all",data=[];
+let clockInterval;
+
 function doAuth(){const v=document.getElementById("authInput").value.trim();if(v===PASSWORD){sessionStorage.setItem(AUTH_KEY,"1");document.getElementById("authOverlay").style.display="none";boot()}else{document.getElementById("authErr").textContent="口令不正确"}}
 document.getElementById("authInput").addEventListener("keydown",e=>{if(e.key==="Enter")doAuth()});
 if(sessionStorage.getItem(AUTH_KEY)==="1"){document.getElementById("authOverlay").style.display="none";boot()}
+
 async function boot(){
-  document.getElementById("toolbar").style.display="flex";document.getElementById("tableWrap").style.display="block";document.getElementById("pagination").style.display="flex";updateClock();setInterval(updateClock,3e4);
+  document.getElementById("toolbar").style.display="flex";
+  document.getElementById("tableWrap").style.display="block";
+  document.getElementById("pagination").style.display="flex";
+  
+  updateClock();
+  if(clockInterval) clearInterval(clockInterval);
+  clockInterval = setInterval(updateClock, 3e4);
+  
   try {
+    // 加时间戳强制不走缓存，确保拉到最新数据
     const res = await fetch("data.json?t=" + Date.now());
     const json = await res.json();
     data = json.items.map(d => ({ ...d, expected_ts: parseDate(d.expected), source_ts_num: parseDate(d.source_ts) }));
@@ -98,6 +122,26 @@ async function boot(){
   }
   render();
 }
+
+async function manualRefresh() {
+  const btn = document.getElementById("refreshBtn");
+  if (btn.disabled) return;
+  
+  btn.innerHTML = "⏳ 正在拉取最新数据...";
+  btn.disabled = true;
+  
+  await boot(); // 重新触发一次数据拉取和渲染
+  
+  btn.innerHTML = "✅ 已是最新";
+  btn.style.background = "#2ea043"; // 变成绿色
+  
+  setTimeout(() => {
+    btn.innerHTML = "🔄 刷新数据";
+    btn.disabled = false;
+    btn.style.background = "var(--accent)"; // 恢复蓝色
+  }, 2000);
+}
+
 function updateClock(){document.getElementById("clockLine").textContent=new Date().toLocaleString("zh-CN",{hour12:false})}
 function parseDate(s){if(!s)return 0;const m=String(s).match(/(\d{4})[-年](\d{1,2})[-月](\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]).getTime();const m2=String(s).match(/(\d{4})[-年](\d{1,2})/);if(m2)return new Date(+m2[1],+m2[2]-1,15).getTime();return 0}
 function cycleSort(){sortState=(sortState+1)%3;render()}
@@ -110,8 +154,6 @@ function render(){
   
   tbody.innerHTML=pageItems.length===0?`<tr><td colspan="8" class="empty">暂无数据，请等待 Actions 抓取或检查 data.json</td></tr>`:pageItems.map(d=>{
     const catLabel={game:"游戏",ai:"AI工具",short:"短剧",fin:"金融"}[d.category]||d.category;
-    
-    // 核心逻辑：有 source_url 跳原网页，没有则跳百度搜索
     const linkUrl = d.source_url || `https://www.baidu.com/s?wd=${encodeURIComponent(d.name + ' 出海')}`;
     const linkColor = d.source_url ? 'var(--accent)' : 'var(--text)';
     const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener" style="color:${linkColor};text-decoration:none;">${esc(d.name)}</a>`;
