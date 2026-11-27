@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-27T02:17:10.487465Z",
+  "updated_at": "2026-11-27T02:20:24.150135Z",
   "items": [
     {
       "name": "南威海外短剧自有发行平台 PeakReel",
@@ -177,7 +177,7 @@
       "overseas": "待确认",
       "expected": "TBD",
       "expected_raw": "查看 TapTap 详情",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "TapTap 预约榜",
       "source_url": "https://www.taptap.cn/app/730107",
       "basis": "P0 TapTap 预约榜自动抓取",
