@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26T11:57:09.138561Z",
+  "updated_at": "2026-11-27T02:17:10.487465Z",
   "items": [
     {
       "name": "南威海外短剧自有发行平台 PeakReel",
@@ -1816,11 +1816,11 @@
       "overseas": "日本 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-24",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 日本",
       "source_url": "https://apps.apple.com/jp/app/%E3%82%A2%E3%82%BA%E3%83%BC%E3%83%AB%E3%83%97%E3%83%AD%E3%83%9F%E3%83%AA%E3%82%A2/id6787982572?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 15686274509",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -1831,11 +1831,11 @@
       "overseas": "中国大陆 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-23",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 中国大陆",
       "source_url": "https://apps.apple.com/cn/app/%E9%A5%A5%E5%9B%B0%E8%8D%92%E9%87%8E/id6479747214?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 13725490196",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -1846,11 +1846,11 @@
       "overseas": "中国大陆 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-24",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 中国大陆",
       "source_url": "https://apps.apple.com/cn/app/%E8%93%9D%E8%89%B2%E6%98%9F%E5%8E%9F-%E6%97%85%E8%B0%A3/id6754017631?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 17647058824",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -1861,11 +1861,11 @@
       "overseas": "中国大陆 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-15",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 中国大陆",
       "source_url": "https://apps.apple.com/cn/app/%E6%88%91%E5%9C%A8%E5%8F%A4%E4%BB%A3%E6%9C%89%E5%BA%A7%E5%9F%8E/id6821266319?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 17254901960",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -1962,11 +1962,11 @@
       "overseas": "沙特 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-13",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 沙特",
       "source_url": "https://apps.apple.com/sa/app/pubg-mobile-flash/id6740521489?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 17956883158",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -1977,11 +1977,11 @@
       "overseas": "沙特 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-17",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 沙特",
       "source_url": "https://apps.apple.com/sa/app/tiles-survive/id6738109752?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 18443572610",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -2036,11 +2036,11 @@
       "overseas": "中国大陆 App Store",
       "expected": "已上线",
       "expected_raw": "2026-10-29",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 中国大陆",
       "source_url": "https://apps.apple.com/cn/app/%E6%AD%A3%E4%B8%AD%E9%9D%B6%E5%BF%832/id6795378556?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 13725490196",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -2065,10 +2065,10 @@
       "overseas": "中国大陆 App Store",
       "expected": "已上线",
       "expected_raw": "2026-10-21",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 中国大陆",
       "source_url": "https://apps.apple.com/cn/app/%E6%98%9F%E9%80%94%E5%A4%A9%E5%9F%8E/id6503579813?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
+      "basis": "P1 App Store 近2月首发/预约",
       "contact": "—",
       "pinned": false
     },
@@ -2285,11 +2285,11 @@
       "overseas": "中国香港 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-17",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 中国香港",
       "source_url": "https://apps.apple.com/hk/app/%E9%BB%9E%E9%BB%9E%E5%A4%A7%E4%BD%9C%E6%88%B0/id6738109752?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 18443572610",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -2448,10 +2448,10 @@
       "overseas": "中国香港 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-23",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 中国香港",
       "source_url": "https://apps.apple.com/hk/app/cc%E5%95%86%E8%81%8A/id6831885919?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
+      "basis": "P1 App Store 近2月首发/预约",
       "contact": "—",
       "pinned": false
     },
@@ -2792,8 +2792,8 @@
       "domestic": "Kosarev Alexander",
       "overseas": "中国香港 Google Play",
       "expected": "已上线",
-      "expected_raw": "近期上架",
-      "source_ts": "2026-11-26",
+      "expected_raw": "Oct 5, 2026",
+      "source_ts": "2026-11-27",
       "source_label": "Google Play 中国香港",
       "source_url": "https://play.google.com/store/apps/details?id=by.fitnessclub.lifestyle&hl=en&gl=hk",
       "basis": "P1 Google 筛选 (+86/国内企业)",
@@ -3798,11 +3798,11 @@
       "overseas": "中国大陆 App Store",
       "expected": "已上线",
       "expected_raw": "2026-11-15",
-      "source_ts": "2026-11-26",
+      "source_ts": "2026-11-27",
       "source_label": "App Store 中国大陆",
       "source_url": "https://apps.apple.com/cn/app/%E7%B2%89ta-friends/id6792664928?uo=4",
-      "basis": "P1 App Store 近2月新上架/预约",
-      "contact": "+86 19872478768",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     },
     {
@@ -4118,6 +4118,21 @@
       "source_url": "https://play.google.com/store/apps/details?id=com.vkontakte.android&hl=en&gl=hk",
       "basis": "P1 Google 筛选 (+86/国内企业)",
       "contact": "+86 13870271239",
+      "pinned": false
+    },
+    {
+      "name": "云·蓝色星原：旅谣",
+      "platform": "app_store",
+      "category": "game",
+      "domestic": "蛮啾游戏",
+      "overseas": "中国大陆 App Store",
+      "expected": "已上线",
+      "expected_raw": "2026-11-25",
+      "source_ts": "2026-11-27",
+      "source_label": "App Store 中国大陆",
+      "source_url": "https://apps.apple.com/cn/app/%E4%BA%91-%E8%93%9D%E8%89%B2%E6%98%9F%E5%8E%9F-%E6%97%85%E8%B0%A3/id6783319398?uo=4",
+      "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
       "pinned": false
     }
   ]
