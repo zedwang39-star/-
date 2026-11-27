@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-27T03:11:31.811993Z",
+  "updated_at": "2026-11-27T03:58:08.678206Z",
   "items": [
     {
       "name": "“猫咪游戏专业户”来中国踢馆：上线抖音微信小游戏，月收入破5000万！",
@@ -13,6 +13,20 @@
       "source_label": "GameLook 新游",
       "source_url": "http://www.gamelook.com.cn/2026/11/607062/",
       "basis": "P1 三方资讯新品",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "未知游戏",
+      "category": "game",
+      "domestic": "待确认",
+      "overseas": "待确认",
+      "expected": "TBD",
+      "expected_raw": "查看 TapTap 详情",
+      "source_ts": "2026-11-27",
+      "source_label": "TapTap 预约榜",
+      "source_url": "https://www.taptap.cn/app/730107",
+      "basis": "P0 TapTap 预约榜自动抓取",
       "contact": "—",
       "pinned": false
     }
