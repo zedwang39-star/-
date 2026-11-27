@@ -5,6 +5,11 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+# 核心修复：建立并发锁，让所有抓取任务排队运行，绝不冲突
+concurrency:
+  group: data-scraping
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pages: write
@@ -35,8 +40,12 @@ jobs:
           git add data.json
           git diff --quiet && git diff --staged --quiet || git commit -m "应用商店数据更新: $(date -u)"
           
-          # 核心修复：拉取远端最新代码并变基，然后再推送
-          git pull --rebase origin main
+          # 核心修复：如果拉取发生冲突，强行使用刚刚抓下来的新数据
+          git pull --rebase origin main || (
+            git checkout --theirs data.json
+            git add data.json
+            git rebase --continue
+          )
           git push
 
       - name: 部署最新数据到网页展示分支
