@@ -299,5 +299,6 @@ def merge_and_save(existing, new_items):
     print(f"应用商店抓取完成。新增 {len(new_items)} 条，库中共 {len(kept)} 条。")
 
 if __name__ == "__main__":
-    existing = json.load(open(DATA_FILE, "r", encoding="utf-8")) if os.path.exists(DATA_FILE) else {"items": []}
+    # 强行清空旧数据，只保留本次抓取
+    existing = {"items": []} 
     merge_and_save(existing, scrape_all_stores())
