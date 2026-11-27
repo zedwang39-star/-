@@ -5,269 +5,216 @@ import re
 import time
 import requests
 import urllib.parse
-from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 from google_play_scraper import search, app as gplay_app
 
 DATA_FILE = "data.json"
 
 COUNTRIES = {
     "sa": "沙特", "ae": "阿联酋", "qa": "卡塔尔", "kw": "科威特", "bh": "巴林", "om": "阿曼",
-    "eg": "埃及", "tr": "土耳其",
-    "us": "美国", "ca": "加拿大",
+    "eg": "埃及", "tr": "土耳其", "us": "美国", "ca": "加拿大",
     "jp": "日本", "kr": "韩国", "tw": "中国台湾", "hk": "中国香港",
     "id": "印尼", "my": "马来西亚", "th": "泰国", "vn": "越南", "ph": "菲律宾",
 }
 
-APPSTORE_GENRES = {
-    "game": "6014", "lifestyle": "6012", "utilities": "6002", "social": "6005"
-}
+APPSTORE_GENRES = {"game": "6014", "lifestyle": "6012", "utilities": "6002", "social": "6005"}
 
 GPLAY_CATEGORIES = {
-    "game": ["new mobile game", "pre-register game", "pre-register rpg"],
-    "lifestyle": ["new lifestyle app", "pre-register lifestyle"],
+    "game": ["pre-register game", "new mobile game"],
+    "lifestyle": ["pre-register lifestyle"],
     "utilities": ["new utility app"],
     "social": ["new social app"],
 }
 
-CN_DEV_KEYWORDS = [
-    "科技", "网络", "信息", "软件", "互动", "游戏", "数码", "无线", "移动", "娱乐", "文化", "传媒",
-    "北京", "上海", "深圳", "广州", "杭州", "成都", "厦门", "福州", "苏州", "武汉", "珠海", "南京", "西安",
-    ".cn", "zh_", "cn_",
-    "Tencent", "NetEase", "ByteDance", "Alibaba", "Baidu", "Xiaomi", "Huawei", "Bilibili",
-    "FunPlus", "Lilith", "miHoYo", "HoYoverse", "Yostar", "Hypergryph", "Papergames",
-    "Yotta", "LongE", "Perfect World", "37 Interactive", "Efun", "IGG", "Tap4Fun", "Habby",
-    "Farlight", "Dragonest", "Archosaur", "Moonton", "KingsGroup", "Onemt", "Joycast",
-    "Manus", "Genspark", "Meshy", "Tripo", "PixVerse", "DeepSeek", "Moonshot", "StepFun",
-    "01.AI", "XVERSE", "AIsphere", "ModelBest", "Lightwheel", "Vast", "Luchen", "HelloTalk",
-    "Appxy", "Dahua", "Easyroid", "VeePro", "Romangic", "WayShot",
-    "Century", "Kingsoft", "Cheetah", "Changyou", "Shanda", "Youzu", "Giant", "Perfect",
-]
+OVERSEAS_BLACKLIST = ["Facebook", "Meta", "Google", "Apple", "Amazon", "Microsoft", "Netflix", "Spotify", "TikTok", "Supercell", "Zynga", "King", "EA", "Gameloft", "Riot", "Roblox", "Epic Games"]
 
-def is_cn_developer(dev_name: str, dev_url: str = "") -> bool:
-    text = (dev_name + " " + dev_url).lower()
-    return any(kw.lower() in text for kw in CN_DEV_KEYWORDS)
+def is_target_developer(dev_name: str) -> bool:
+    return not any(bad.lower() in dev_name.lower() for bad in OVERSEAS_BLACKLIST)
 
-PHONE_PATTERN = re.compile(r'(?:\+?86[\s\-]?)?(1[3-9]\d{9})')
-
-def extract_phone_from_url(url: str) -> str:
-    if not url or not url.startswith(("http://", "https://")):
-        return ""
+def is_within_180_days(date_str: str) -> bool:
+    if not date_str: return False
     try:
-        # 优化：超时改为 3 秒，避免卡死
-        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
-        r = requests.get(url, headers=headers, timeout=3)
-        r.encoding = r.apparent_encoding
-        soup = BeautifulSoup(r.text, 'html.parser')
-        matches = PHONE_PATTERN.findall(soup.get_text(separator=' '))
-        if matches:
-            for m in matches:
-                if len(m) == 11 and m.startswith("1"):
-                    return f"+86 {m}"
-        return ""
-    except Exception:
-        return ""
-
-def is_appstore_strict_release(release_str: str, current_version_str: str) -> bool:
-    if not release_str: return False
-    try:
-        release_dt = datetime.datetime.strptime(release_str[:10], "%Y-%m-%d").replace(tzinfo=datetime.timezone.utc)
-        now = datetime.datetime.now(datetime.timezone.utc)
-        if release_dt > now: return True
-        if (now - release_dt).days > 90: return False
-        if current_version_str:
-            cv_dt = datetime.datetime.strptime(current_version_str[:10], "%Y-%m-%d").replace(tzinfo=datetime.timezone.utc)
-            if (cv_dt - release_dt).days > 30: return False
-        return True
-    except Exception:
-        return False
-
-def is_gplay_strict_release(released_str: str) -> bool:
-    if not released_str: return False
-    try:
-        release_dt = datetime.datetime.strptime(released_str, "%b %d, %Y").replace(tzinfo=datetime.timezone.utc)
-        if (datetime.datetime.now(datetime.timezone.utc) - release_dt).days <= 90:
-            return True
+        for fmt in ("%Y-%m-%d", "%b %d, %Y", "%Y-%m-%dT%H:%M:%SZ"):
+            try:
+                dt = datetime.datetime.strptime(date_str[:19], fmt).replace(tzinfo=datetime.timezone.utc)
+                now = datetime.datetime.now(datetime.timezone.utc)
+                return dt > now or (now - dt).days <= 180
+            except ValueError:
+                continue
         return False
     except Exception:
         return False
 
-def scrape_appstore(country_code: str, country_name: str):
+# ========== 新增：AppAgg 非榜单新上架 RSS ==========
+def scrape_appagg_rss():
+    """从 AppAgg 抓取纯新上架的应用/游戏，打破榜单限制"""
     items = []
-    feed_types = ["topfreeapplications", "topgrossingapplications"]
+    # AppAgg 提供了按类别和时间的新上架 RSS
+    rss_urls = [
+        ("https://appagg.com/rss/new/?hl=en", "app_store", "AppAgg 新上架应用"),
+        ("https://appagg.com/rss/new-games/?hl=en", "app_store", "AppAgg 新上架游戏")
+    ]
+    
+    for url, platform, label in rss_urls:
+        try:
+            req = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
+            root = ET.fromstring(req.content)
+            entries = root.findall(".//item")
+            
+            for entry in entries[:30]: # 每个源取前30条
+                title = (entry.findtext("title") or "").strip()
+                link = (entry.findtext("link") or "").strip()
+                pub_date = (entry.findtext("pubDate") or "")
+                
+                if not title or not link: continue
+                # 粗略过滤非近期数据
+                if not is_within_180_days(pub_date) and pub_date: continue
+                
+                # 判断是否包含出海/国内厂商特征（通过标题或粗略过滤）
+                # 这里不再做严苛的开发者过滤，因为 RSS 不提供，交给用户在前端人工筛选
+                items.append({
+                    "name": title,
+                    "platform": platform, 
+                    "category": "game" if "game" in url else "app",
+                    "domestic": "未知（待核实）", 
+                    "overseas": "海外（非榜单新上架）",
+                    "expected": "已上线", 
+                    "expected_raw": pub_date[:16] if pub_date else "近期",
+                    "source_ts": datetime.date.today().isoformat(),
+                    "source_label": label, 
+                    "source_url": link,
+                    "basis": "P1 RSS 源时间轴", 
+                    "contact": "—", 
+                    "pinned": False
+                })
+        except Exception as e:
+            print(f"AppAgg RSS 抓取失败: {e}")
+            
+    return items
+
+# ========== App Store 榜单抓取（保留作为补充） ==========
+def scrape_appstore(country_code: str, country_name: str) -> list:
+    items = []
     for cat_key, genre_id in APPSTORE_GENRES.items():
-        for feed_type in feed_types:
-            # 优化：limit=100 改为 limit=50，加快速度
+        for feed_type in ["topfreeapplications"]: # 只抓免费榜，减轻压力
             url = f"https://itunes.apple.com/{country_code}/rss/{feed_type}/limit=50/genre={genre_id}/json"
             try:
-                r = requests.get(url, timeout=10)
+                r = requests.get(url, timeout=5)
                 r.raise_for_status()
-                entries = r.json().get("feed", {}).get("entry", [])
-                for entry in entries:
+                for entry in r.json().get("feed", {}).get("entry", []):
                     app_id = entry.get("id", {}).get("attributes", {}).get("im:id")
                     if not app_id: continue
-                    
                     lr = requests.get(f"https://itunes.apple.com/lookup?id={app_id}&country={country_code}", timeout=5)
                     result = lr.json().get("results", [])
                     if not result: continue
-                    
                     info = result[0]
                     release_date = info.get("releaseDate", "")
-                    current_version_date = info.get("currentVersionReleaseDate", "")
-                    
-                    if not is_appstore_strict_release(release_date, current_version_date): continue
-
+                    if not is_within_180_days(release_date): continue
                     dev_name = info.get("artistName", "")
-                    dev_url = info.get("sellerUrl", "") or info.get("artistViewUrl", "")
-                    if not is_cn_developer(dev_name, dev_url): continue
-
+                    if not is_target_developer(dev_name): continue
                     items.append({
-                        "name": info.get("trackName", ""),
-                        "platform": "app_store",
-                        "category": cat_key,
-                        "domestic": dev_name,
-                        "overseas": f"{country_name} App Store",
-                        "expected": "预约中" if datetime.datetime.strptime(release_date[:10], "%Y-%m-%d").replace(tzinfo=datetime.timezone.utc) > datetime.datetime.now(datetime.timezone.utc) else "已上线",
-                        "expected_raw": release_date[:10],
-                        "source_ts": datetime.date.today().isoformat(),
-                        "source_label": f"App Store {country_name}",
-                        "source_url": info.get("trackViewUrl", ""),
-                        "basis": "P1 App Store 近3月首发/预约",
-                        "contact": "—",
-                        "pinned": False
+                        "name": info.get("trackName", ""), "platform": "app_store", "category": cat_key,
+                        "domestic": dev_name, "overseas": f"{country_name} App Store",
+                        "expected": "预约中" if is_within_180_days(release_date) and datetime.datetime.strptime(release_date[:10], "%Y-%m-%d").replace(tzinfo=datetime.timezone.utc) > datetime.datetime.now(datetime.timezone.utc) else "已上线",
+                        "expected_raw": release_date[:10], "source_ts": datetime.date.today().isoformat(),
+                        "source_label": f"App Store {country_name}", "source_url": info.get("trackViewUrl", ""),
+                        "basis": "P1 榜单半年内首发/预约", "contact": "—", "pinned": False
                     })
-            except Exception as e:
-                print(f"App Store {country_name}/{cat_key} 失败: {e}")
+            except Exception:
+                pass
     return items
 
-def scrape_gplay(country_code: str, country_name: str):
+# ========== Google Play 搜索抓取（保留预约搜索） ==========
+def scrape_gplay(country_code: str, country_name: str) -> list:
     items = []
     for cat_key, keywords in GPLAY_CATEGORIES.items():
         for keyword in keywords:
             try:
-                # 优化：n_hits=30 改为 n_hits=15
-                results = search(keyword, lang="en", country=country_code, n_hits=15)
+                results = search(keyword, lang="en", country=country_code, n_hits=10)
                 for r in results:
                     app_id = r.get("appId")
                     if not app_id: continue
-                    
                     detail = gplay_app(app_id, lang="en", country=country_code)
                     released = detail.get("released", "")
                     is_preregister = "pre-register" in keyword.lower()
-                    
-                    if not is_preregister and not is_gplay_strict_release(released): continue
-                    
+                    if not is_preregister and not is_within_180_days(released): continue
                     dev_name = detail.get("developer", "")
-                    dev_url = detail.get("developerWebsite", "") or detail.get("url", "")
-                    
-                    phone = extract_phone_from_url(dev_url)
-                    is_cn = is_cn_developer(dev_name, dev_url)
-                    if not phone and not is_cn: continue
-
+                    if not is_target_developer(dev_name): continue
                     items.append({
-                        "name": detail.get("title", ""),
-                        "platform": "google",
-                        "category": cat_key,
-                        "domestic": dev_name,
-                        "overseas": f"{country_name} Google Play",
+                        "name": detail.get("title", ""), "platform": "google", "category": cat_key,
+                        "domestic": dev_name, "overseas": f"{country_name} Google Play",
                         "expected": "预约中" if is_preregister or not released else "已上线",
-                        "expected_raw": released or "预约阶段",
-                        "source_ts": datetime.date.today().isoformat(),
-                        "source_label": f"Google Play {country_name}",
-                        "source_url": detail.get("url", ""),
-                        "basis": "P1 Google 近3月首发/预约 (+86/国内企业)",
-                        "contact": phone or "国内企业(未留+86)",
-                        "pinned": False
+                        "expected_raw": released or "预约阶段", "source_ts": datetime.date.today().isoformat(),
+                        "source_label": f"Google Play {country_name}", "source_url": detail.get("url", ""),
+                        "basis": "P1 预约/半年内首发", "contact": "—", "pinned": False
                     })
-            except Exception as e:
-                print(f"Google Play {country_name}/{cat_key}/{keyword} 失败: {e}")
+            except Exception:
+                pass
     return items
 
-def scrape_taptap_cn():
+# ========== TapTap 预约榜 ==========
+def scrape_taptap(is_global=False) -> list:
     items = []
-    url = "https://www.taptap.cn/webapiv2/app-top/v2/hits?platform=android&type_name=reserve&dataSource=Android"
+    domain = "taptap.io" if is_global else "taptap.cn"
+    url = f"https://www.{domain}/webapiv2/app-top/v2/hits?platform=android&type_name=reserve&dataSource=Android"
     headers = {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
-        "Referer": "https://www.taptap.cn/",
-        "Accept": "application/json, text/plain, */*",
-        "X-UA": "V=1&PN=WebM&LANG=zh_CN&VN_CODE=102&LOC=CN&PLT=iOS&DS=Android&UID=12f0a48b-bd25-4dce-9d50-27924e83da1d&OS=iOS&OSV=18.5"
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15",
+        "Referer": f"https://www.{domain}/",
+        "X-UA": "V=1&PN=WebM&LANG=zh_CN&VN_CODE=102&LOC=CN&PLT=iOS&DS=Android&OS=iOS&OSV=18.5"
     }
     try:
-        resp = requests.get(url, headers=headers, timeout=20)
-        resp.raise_for_status()
-        data = resp.json()
-        game_list = data.get("data", {}).get("list", [])
-        for game in game_list:
+        resp = requests.get(url, headers=headers, timeout=10)
+        for game in resp.json().get("data", {}).get("list", []):
             title = game.get("title") or game.get("name", "未知游戏")
             app_id = game.get("app_id") or game.get("id")
-            source_url = f"https://www.taptap.cn/app/{app_id}" if app_id else f"https://www.taptap.cn/search/{urllib.parse.quote(title)}"
             items.append({
-                "name": title, "platform": "other", "category": "game", "domestic": "国内厂商", "overseas": "中国大陆",
-                "expected": "预约中", "expected_raw": "TapTap 国内预约", "source_ts": datetime.date.today().isoformat(),
-                "source_label": "TapTap 国内预约榜", "source_url": source_url, "basis": "P0 国内即将上线", "contact": "—", "pinned": False
+                "name": title, "platform": "other", "category": "game",
+                "domestic": "国内出海厂商" if is_global else "国内厂商",
+                "overseas": "全球" if is_global else "中国大陆",
+                "expected": "预约中", "expected_raw": "TapTap 预约", "source_ts": datetime.date.today().isoformat(),
+                "source_label": f"TapTap {'国际' if is_global else '国内'}预约榜",
+                "source_url": f"https://www.{domain}/app/{app_id}" if app_id else f"https://www.{domain}/search/{urllib.parse.quote(title)}",
+                "basis": "P0 预约榜（即将上线）", "contact": "—", "pinned": False
             })
-    except Exception as e:
-        print(f"TapTap.cn 抓取失败: {e}")
+    except Exception:
+        pass
     return items
 
-def scrape_taptap_global():
-    items = []
-    url = "https://www.taptap.io/webapiv2/app-top/v2/hits?platform=android&type_name=reserve&dataSource=Android"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
-        "Referer": "https://www.taptap.io/",
-        "Accept": "application/json, text/plain, */*",
-        "X-UA": "V=1&PN=WebM&LANG=en_US&VN_CODE=102&LOC=US&PLT=iOS&DS=Android&UID=12f0a48b-bd25-4dce-9d50-27924e83da1d&OS=iOS&OSV=18.5"
-    }
-    try:
-        resp = requests.get(url, headers=headers, timeout=20)
-        resp.raise_for_status()
-        data = resp.json()
-        game_list = data.get("data", {}).get("list", [])
-        for game in game_list:
-            title = game.get("title") or game.get("name", "Unknown Game")
-            app_id = game.get("app_id") or game.get("id")
-            source_url = f"https://www.taptap.io/app/{app_id}" if app_id else f"https://www.taptap.io/search/{urllib.parse.quote(title)}"
-            items.append({
-                "name": title, "platform": "other", "category": "game", "domestic": "国内出海厂商", "overseas": "全球",
-                "expected": "预约中", "expected_raw": "TapTap 国际预约", "source_ts": datetime.date.today().isoformat(),
-                "source_label": "TapTap 国际预约榜", "source_url": source_url, "basis": "P0 海外即将上线", "contact": "—", "pinned": False
-            })
-    except Exception as e:
-        print(f"TapTap.io 抓取失败: {e}")
-    return items
-
-def scrape_all_stores():
+def scrape_all() -> list:
     all_items = []
+    
+    print("1. 抓取 AppAgg 非榜单新上架...")
+    all_items.extend(scrape_appagg_rss())
+    
+    print("2. 抓取 16 国 App Store 榜单补充...")
     for code, name in COUNTRIES.items():
-        print(f"正在抓取 {name} ({code}) ...")
         all_items.extend(scrape_appstore(code, name))
         all_items.extend(scrape_gplay(code, name))
-        time.sleep(0.5)
+        time.sleep(0.1)
         
-    print("正在抓取 TapTap 国内预约榜...")
-    all_items.extend(scrape_taptap_cn())
-    
-    print("正在抓取 TapTap 国际预约榜...")
-    all_items.extend(scrape_taptap_global())
+    print("3. 抓取 TapTap 预约榜...")
+    all_items.extend(scrape_taptap(is_global=False))
+    all_items.extend(scrape_taptap(is_global=True))
     
     return all_items
 
 def merge_and_save(existing, new_items):
     name_map = {}
+    # 保留非商店数据（如第三方资讯）
     for item in existing.get("items", []):
         if item.get("platform") not in ["app_store", "google"]:
             name_map[item["name"]] = item
-
+    # 加入新抓取的数据
     for item in new_items:
         name_map[item["name"]] = item
-
-    cutoff_date = (datetime.date.today() - datetime.timedelta(days=180)).isoformat()
-    kept = [v for v in name_map.values() if v.get("source_ts", "9999") >= cutoff_date]
-
+        
+    cutoff = (datetime.date.today() - datetime.timedelta(days=180)).isoformat()
+    kept = [v for v in name_map.values() if v.get("source_ts", "9999") >= cutoff]
+    
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump({"updated_at": datetime.datetime.utcnow().isoformat() + "Z", "items": kept}, f, ensure_ascii=False, indent=2)
-    print(f"抓取完成。本次新增 {len(new_items)} 条，最终库中共 {len(kept)} 条。")
+    print(f"完成。新增 {len(new_items)} 条，库中共 {len(kept)} 条。")
 
 if __name__ == "__main__":
     existing = json.load(open(DATA_FILE, "r", encoding="utf-8")) if os.path.exists(DATA_FILE) else {"items": []}
-    merge_and_save(existing, scrape_all_stores())
+    merge_and_save(existing, scrape_all())
