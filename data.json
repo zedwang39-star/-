@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-27T02:39:52.579096Z",
+  "updated_at": "2026-11-27T02:45:08.448046Z",
   "items": [
     {
       "name": "Lifestyle Фитнес",
@@ -193,6 +193,21 @@
       "source_label": "App Store 中国香港",
       "source_url": "https://apps.apple.com/hk/app/cc%E5%95%86%E8%81%8A/id6831885919?uo=4",
       "basis": "P1 App Store 近2月首发/预约",
+      "contact": "—",
+      "pinned": false
+    },
+    {
+      "name": "“猫咪游戏专业户”来中国踢馆：上线抖音微信小游戏，月收入破5000万！",
+      "platform": "other",
+      "category": "game",
+      "domestic": "海外/全球",
+      "overseas": "全球",
+      "expected": "已发布/预约中",
+      "expected_raw": "资讯",
+      "source_ts": "2026-11-27",
+      "source_label": "GameLook 新游",
+      "source_url": "http://www.gamelook.com.cn/2026/11/607062/",
+      "basis": "P1 三方资讯新品",
       "contact": "—",
       "pinned": false
     }
