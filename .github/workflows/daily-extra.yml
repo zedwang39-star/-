@@ -2,9 +2,12 @@ name: 每日开源信息自动补充
 
 on:
   schedule:
-    # 每天北京时间 10:00（UTC 2:00）执行一次
     - cron: '0 2 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: data-scraping
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -30,6 +33,11 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
           git diff --quiet && git diff --staged --quiet || git commit -m "每日开源情报更新: $(date -u)"
+          git pull --rebase origin main || (
+            git checkout --theirs data.json
+            git add data.json
+            git rebase --continue
+          )
           git push
 
       - name: 部署最新数据到网页展示分支
