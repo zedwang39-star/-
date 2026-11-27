@@ -2,9 +2,12 @@ name: 定时更新出海App数据
 
 on:
   schedule:
-    # UTC 1,3,5,7,9,11 点 = 北京时间 9,11,13,15,17,19 点
     - cron: '0 1,3,5,7,9,11 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: data-scraping
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -35,6 +38,11 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
           git diff --quiet && git diff --staged --quiet || git commit -m "自动更新: $(date -u)"
+          git pull --rebase origin main || (
+            git checkout --theirs data.json
+            git add data.json
+            git rebase --continue
+          )
           git push
 
       - name: 部署到 GitHub Pages
