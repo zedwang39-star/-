@@ -5,7 +5,6 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
-# 核心修复：建立并发锁，让所有抓取任务排队运行，绝不冲突
 concurrency:
   group: data-scraping
   cancel-in-progress: false
@@ -18,37 +17,28 @@ permissions:
 jobs:
   app-store-scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 15          # 硬性上限，防止意外卡死
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
-          pip install requests google-play-scraper beautifulsoup4
-
-      - name: 运行应用商店抓取脚本
+          pip install requests google-play-scraper
+      - name: 运行抓取脚本
         run: python app_store_scraper.py
-
-      - name: 提交更新数据到 main
+        timeout-minutes: 12      # 脚本执行上限
+      - name: 提交更新
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "应用商店数据更新: $(date -u)"
-          
-          # 核心修复：如果拉取发生冲突，强行使用刚刚抓下来的新数据
-          git pull --rebase origin main || (
-            git checkout --theirs data.json
-            git add data.json
-            git rebase --continue
-          )
+          git diff --quiet && git diff --staged --quiet || git commit -m "应用商店更新: $(date -u)"
+          git pull --rebase origin main || (git checkout --theirs data.json && git add data.json && git rebase --continue)
           git push
-
-      - name: 部署最新数据到网页展示分支
+      - name: 部署到 Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
